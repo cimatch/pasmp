@@ -29,7 +29,7 @@ version = next((line.split('=')[1].strip().replace("'", '')
 setup(
     name="pasmp",
     version='0.3.1',
-    url='https://www.atomsware.co.jp',
+    url='https://github.com/cimatch/pasmp',
     author='atomsware',
     author_email='shimada@atomsware.co.jp',
     maintainer='atomsware',
