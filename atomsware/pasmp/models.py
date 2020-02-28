@@ -19,6 +19,12 @@ class SwiftMessage:
             val = val + str(block) + ' '
         return val
 
+    def getMT(self):
+        val = ''
+        for block in self.blocks:
+            val = val + block.getMT()
+        return val
+
     class Meta:
         verbose_name = 'SWIFT Message'
         verbose_name_plural = 'SWIFT Message'
@@ -39,6 +45,12 @@ class Block:
         for tag in self.tags:
             val = val + str(tag) + ' '
         return val + ']'
+
+    def getMT(self):
+        val = '{' + self.block_no + ':'
+        for tag in self.tags:
+            val = val + '{' + tag.getMT() + '}'
+        return val + '}'
 
     class Meta:
         verbose_name = 'Block'
@@ -64,6 +76,15 @@ class BasicHeaderBlock(Block):
         self.lTAddr = block_text[3:15]
         self.sessionID = block_text[15:19]
         self.sequenceID = block_text[19:25]
+
+    def getMT(self):
+        val = '{' + self.block_no + ':'
+        val = val + self.appID
+        val = val + self.serviceID
+        val = val + self.lTAddr
+        val = val + self.sessionID
+        val = val + self.sequenceID
+        return val + '}'
 
 
 class ApplicationHeaderBlock(Block):
@@ -100,6 +121,22 @@ class ApplicationHeaderBlock(Block):
             self.outputTime = block_text[42:46]
             self.priority = block_text[46:47]
 
+    def getMT(self):
+        val = '{' + self.block_no + ':'
+        val = val + self.ioType
+        val = val + self.messageType
+        if self.ioType == 'I':
+            val = val + self.lTAddr
+            val = val + self.priority
+            val = val + self.deliveryMonitorField
+            val = val + self.obsolescencePeriod
+        if self.ioType == 'O':
+            val = val + self.inputTime
+            val = val + self.messageInputReference
+            val = val + self.outputDate
+            val = val + self.outputTime
+            val = val + self.priority
+        return val + '}'
 
 class UserHeaderBlock(Block):
     """ """
@@ -113,8 +150,13 @@ class TextBlock(Block):
             val = val + str(tag) + ' ' + '\r\n'
         return val + ']'
 
+    def getMT(self):
+        val = '{' + self.block_no + ':\r\n'
+        for tag in self.tags:
+            val = val + ':' + tag.getMT() + '\r\n'
+        return val + '-}'
 
-class AckTextBlock(TextBlock):
+class AckTextBlock(Block):
     """ """
 
 
@@ -134,6 +176,13 @@ class HistoryBlock(TextBlock):
             val = val + str(block) + ' '
         return val + ']'
 
+    def getMT(self):
+        val = '{' + self.block_no + ':'
+        for tag in self.tags:
+            val = val + '{' + tag.getMT() + '}'
+        for block in self.blocks:
+            val = val + block.getMT()
+        return val + '}'
 
 class TrailerBlock(Block):
     """ """
@@ -158,6 +207,9 @@ class Tag:
 
     def __str__(self):
         return '(' + self.tag_no + self.tag_option + ':' + self.tag_text + ')'
+
+    def getMT(self):
+        return self.tag_no + self.tag_option + ':' + self.tag_text
 
     class Meta:
         verbose_name = 'Tag'

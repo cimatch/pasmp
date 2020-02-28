@@ -12,7 +12,7 @@ from ._exceptions import SwiftException, SwiftNotRecognizedException, \
 from .handler import ContentHandler, ErrorHandler
 
 __copyright__    = 'Copyright (C) 2019 Atomsware'
-version = "0.3.0"
+version = "0.4.0"
 
 default_parser_list = ["atomsware.pasmp.expatreader"]
 

@@ -63,6 +63,7 @@ class DomHandler(ContentHandler):
     def startBlock(self, locator, blockNo):
         self.value = ""
         self.blockLevel += 1
+#        print(blockNo + ' Start')
         if self.blockLevel == 1:
             block = create_block(blockNo, self.mt)
             self.mt.blocks.append(block)
@@ -85,7 +86,11 @@ class DomHandler(ContentHandler):
     def endBlock(self, locator, blockNo):
         self.currentBlock.setBlockText(self.value)
         self.blockLevel -= 1
-        self.currentBlock = self.currentBlock.parent
+ #       print(blockNo + ' End')
+        if self.blockLevel == 0:
+            self.currentBlock = None
+        else:
+            self.currentBlock = self.currentBlock.parent
 
     def endDocument(self):
         """"""

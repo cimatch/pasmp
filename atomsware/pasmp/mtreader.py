@@ -6,7 +6,7 @@ Created on 2019/12/09
 """
 from atomsware.pasmp import handler
 from ._exceptions import SwiftParseException, SwiftNotSupportedException
-
+from collections import deque
 
 class MTReader:
 
@@ -39,6 +39,7 @@ class IncrementalParser(MTReader):
     def __init__(self, bufsize=2 ** 16):
         self._bufsize = bufsize
         self._locator = Locator()
+        self._blockQueue = deque()
         self._currentBlock = None
         self._currentTag = None
         self._name = None
@@ -80,9 +81,8 @@ class IncrementalParser(MTReader):
                     """ 先頭 -} タグ終了 & 4ブロック終了 """
                     self._cont_handler.endTag(self._locator, self._currentTag)
                     self._currentTag = None
-                    self._cont_handler.endBlock(self._locator, self._currentBlock)
-                    self._currentBlock = None
                     self._block4 = False
+                    self._pos = self._pos + 1
                 else:
                     """データ"""
                     self._cont_handler.characters(self._locator, chr(x))
@@ -108,6 +108,7 @@ class IncrementalParser(MTReader):
                     else:
                         self._block4 = False
                     self._currentBlock = self._name
+                    self._blockQueue.append(self._name)
                     self._name = ""
                 elif len(self._name) == 2 or len(self._name) == 3:
                     """ タグのコロン """
@@ -127,14 +128,9 @@ class IncrementalParser(MTReader):
                     self._cont_handler.endTag(self._locator, self._currentTag)
                     self._currentTag = None
                 else:
-                    if self._currentBlock is not None:
-                        """ }でブロック終了 """
-                        self._cont_handler.endBlock(self._locator, self._currentBlock)
-                        self._currentBlock = None
-                    else:
-                        """ -}でブロック終了 """
-                        """ End Block4 """
-                        self._name = ""
+                    """ }でブロック終了 """
+                    self._cont_handler.endBlock(self._locator, self._blockQueue.pop())
+                    self._currentBlock = None
             elif x == 10:  # "\r"
                 if self._block4 is True:
                     """ブロック４内でタグ内の改行はデータ"""
